@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="32dp"
+    android:background="#FF6B35">
+
+    <ImageView
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:src="@drawable/ic_block"
+        android:layout_marginBottom="24dp" />
+
+    <TextView
+        android:id="@+id/blocked_app_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="App is blocked"
+        android:textSize="24sp"
+        android:textColor="@android:color/white"
+        android:textStyle="bold"
+        android:layout_marginBottom="16dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Take a moment to refocus"
+        android:textSize="16sp"
+        android:textColor="@android:color/white"
+        android:layout_marginBottom="32dp" />
+
+    <TextView
+        android:id="@+id/quote_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Motivational quote here"
+        android:textSize="18sp"
+        android:textColor="@android:color/white"
+        android:textStyle="italic"
+        android:textAlignment="center"
+        android:layout_marginBottom="48dp"
+        android:padding="16dp"
+        android:background="@drawable/quote_background" />
+
+    <Button
+        android:id="@+id/open_focusflow_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Open FocusFlow"
+        android:textColor="@android:color/white"
+        android:background="@drawable/button_primary"
+        android:layout_marginBottom="16dp"
+        android:padding="16dp" />
+
+    <Button
+        android:id="@+id/close_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Go to Home Screen"
+        android:textColor="#FF6B35"
+        android:background="@drawable/button_secondary"
+        android:padding="16dp" />
+
+</LinearLayout>
