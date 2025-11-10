@@ -14,9 +14,30 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   String _userName = 'User';
+  String _selectedAvatar = '👤'; // Default avatar
   List<TodoTask> _tasks = [];
   List<PomodoroSession> _sessions = [];
   bool _isLoading = true;
+
+  // Cartoon avatars for students
+  static const List<Map<String, String>> _avatars = [
+    {'emoji': '👨', 'name': 'Man', 'category': 'adult'},
+    {'emoji': '👩', 'name': 'Woman', 'category': 'adult'},
+    {'emoji': '👦', 'name': 'Boy', 'category': 'child'},
+    {'emoji': '👧', 'name': 'Girl', 'category': 'child'},
+    {'emoji': '🧑‍🎓', 'name': 'Student', 'category': 'student'},
+    {'emoji': '👨‍🎓', 'name': 'Male Student', 'category': 'student'},
+    {'emoji': '👩‍🎓', 'name': 'Female Student', 'category': 'student'},
+    {'emoji': '🧑', 'name': 'Person', 'category': 'adult'},
+    {'emoji': '🧒', 'name': 'Child', 'category': 'child'},
+    {'emoji': '👤', 'name': 'Default', 'category': 'default'},
+    {'emoji': '🦸', 'name': 'Superhero', 'category': 'fun'},
+    {'emoji': '🦸‍♀️', 'name': 'Superheroine', 'category': 'fun'},
+    {'emoji': '🧙', 'name': 'Wizard', 'category': 'fun'},
+    {'emoji': '🧙‍♀️', 'name': 'Witch', 'category': 'fun'},
+    {'emoji': '👨‍💻', 'name': 'Tech Student', 'category': 'student'},
+    {'emoji': '👩‍💻', 'name': 'Tech Student', 'category': 'student'},
+  ];
 
   @override
   void initState() {
@@ -26,11 +47,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   void _loadData() async {
     final name = StorageService.getString('user_name') ?? 'User';
+    final avatar = StorageService.getString('user_avatar') ?? '👤';
     final savedTasks = StorageService.getStringList('todo_tasks') ?? [];
     final savedSessions = StorageService.getStringList('pomodoro_sessions') ?? [];
 
     setState(() {
       _userName = name;
+      _selectedAvatar = avatar;
       _tasks = savedTasks.map((json) => TodoTask.fromJson(json)).toList();
       _sessions = savedSessions.map((json) => PomodoroSession.fromJson(json)).toList();
       _isLoading = false;
@@ -124,15 +147,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
         padding: const EdgeInsets.all(20),
         child: Row(
           children: [
-            CircleAvatar(
+            GestureDetector(
+              onTap: _showAvatarSelection,
+              child: CircleAvatar(
               radius: 40,
               backgroundColor: Theme.of(context).primaryColor,
               child: Text(
-                _userName[0].toUpperCase(),
+                  _selectedAvatar,
                 style: const TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                    fontSize: 40,
+                  ),
                 ),
               ),
             ),
@@ -281,20 +305,50 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final now = DateTime.now();
     final weekData = List.generate(7, (index) {
       final date = now.subtract(Duration(days: 6 - index));
+      
+      // Count completed tasks for this day
+      final tasksCount = _tasks.where((task) {
+        return task.isCompleted &&
+            task.completedAt != null &&
+            task.completedAt!.year == date.year &&
+            task.completedAt!.month == date.month &&
+            task.completedAt!.day == date.day;
+      }).length;
+      
+      // Count completed Pomodoro sessions for this day
       final sessionsCount = _sessions.where((session) {
         return session.startTime.year == date.year &&
             session.startTime.month == date.month &&
             session.startTime.day == date.day &&
             session.isCompleted;
       }).length;
-      return sessionsCount.toDouble();
+      
+      // Combine tasks and sessions for total productivity score
+      return (tasksCount + sessionsCount).toDouble();
     });
+
+    final maxValue = weekData.isEmpty ? 1.0 : (weekData.reduce((a, b) => a > b ? a : b) + 2).toDouble();
 
     return BarChart(
       BarChartData(
         alignment: BarChartAlignment.spaceAround,
-        maxY: (weekData.reduce((a, b) => a > b ? a : b) + 2).toDouble(),
-        barTouchData: BarTouchData(enabled: false),
+        maxY: maxValue,
+        barTouchData: BarTouchData(
+          enabled: true,
+          touchTooltipData: BarTouchTooltipData(
+            tooltipRoundedRadius: 8,
+            tooltipPadding: const EdgeInsets.all(8),
+            tooltipBgColor: Theme.of(context).primaryColor,
+            getTooltipItem: (group, groupIndex, rod, rodIndex) {
+              final date = now.subtract(Duration(days: 6 - group.x.toInt()));
+              final dateStr = DateFormat('MMM dd').format(date);
+              return BarTooltipItem(
+                '$dateStr\n${rod.toY.toInt()} activities',
+                const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              );
+            },
+          ),
+        ),
         titlesData: FlTitlesData(
           show: true,
           bottomTitles: AxisTitles(
@@ -457,6 +511,66 @@ class _ProfileScreenState extends State<ProfileScreen> {
               }
             },
             child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showAvatarSelection() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Choose Your Avatar'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: GridView.builder(
+            shrinkWrap: true,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 4,
+              crossAxisSpacing: 8,
+              mainAxisSpacing: 8,
+            ),
+            itemCount: _avatars.length,
+            itemBuilder: (context, index) {
+              final avatar = _avatars[index];
+              final isSelected = _selectedAvatar == avatar['emoji'];
+              return GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _selectedAvatar = avatar['emoji']!;
+                    StorageService.setString('user_avatar', _selectedAvatar);
+                  });
+                  Navigator.pop(context);
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? Theme.of(context).primaryColor.withValues(alpha: 0.2)
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: isSelected
+                          ? Theme.of(context).primaryColor
+                          : Colors.grey.withValues(alpha: 0.3),
+                      width: isSelected ? 2 : 1,
+                    ),
+                  ),
+                  child: Center(
+                    child: Text(
+                      avatar['emoji']!,
+                      style: const TextStyle(fontSize: 32),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
           ),
         ],
       ),

@@ -242,16 +242,19 @@ class _PomodoroScreenState extends State<PomodoroScreen> {
       children: [
         if (_isRunning)
           FloatingActionButton.large(
+            heroTag: 'pomodoro_play_pause',
             onPressed: _pauseTimer,
             child: const Icon(Icons.pause, size: 32),
           )
         else
           FloatingActionButton.large(
+            heroTag: 'pomodoro_play_pause',
             onPressed: _startTimer,
             child: const Icon(Icons.play_arrow, size: 32),
           ),
         const SizedBox(width: 16),
         FloatingActionButton(
+          heroTag: 'pomodoro_reset',
           onPressed: _resetTimer,
           child: const Icon(Icons.refresh),
         ),
