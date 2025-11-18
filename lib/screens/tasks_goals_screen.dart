@@ -153,11 +153,13 @@ class _TasksGoalsScreenState extends State<TasksGoalsScreen> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    // Use theme-driven colors so light/dark match perfectly
-    final background = theme.colorScheme.surface;
-    final border = theme.colorScheme.outline.withValues(alpha: 0.12);
-    final iconColor =
-        theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.9);
+    // Use the same color as the card/surface background to match outer shape perfectly
+    // final background = theme.cardColor;
+    // Subtle border that matches the background
+    final border = isDark 
+        ? theme.colorScheme.outline.withValues(alpha: 0.15)
+        : theme.colorScheme.outline.withValues(alpha: 0.1);
+    final iconColor = theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.8);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -165,41 +167,44 @@ class _TasksGoalsScreenState extends State<TasksGoalsScreen> {
         duration: const Duration(milliseconds: 250),
         curve: Curves.easeOut,
         decoration: BoxDecoration(
-          color: background,
+          color: theme.cardTheme.color,
           borderRadius: BorderRadius.circular(28),
-          border: Border.all(color: border),
+          border: Border.all(color: border, width: 1),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.28 : 0.08),
-              blurRadius: 22,
-              offset: const Offset(0, 10),
+              color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.06),
+              blurRadius: 16,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         constraints: const BoxConstraints(minHeight: 56),
         child: Row(
           children: [
             Icon(Icons.search, color: iconColor, size: 22),
-            const SizedBox(width: 12),
+            const SizedBox(width: 14),
             Expanded(
               child: TextField(
                 controller: _searchController,
                 textInputAction: TextInputAction.search,
                 style: TextStyle(
                   color: theme.colorScheme.onSurface,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w500,
                   fontSize: 16,
+                  letterSpacing: 0.2,
                 ),
                 decoration: InputDecoration(
                   hintText: 'Search tasks & goals',
                   hintStyle: TextStyle(
                     color: theme.colorScheme.onSurfaceVariant
-                        .withValues(alpha: 0.7),
+                        .withValues(alpha: 0.6),
                     fontSize: 16,
+                    fontWeight: FontWeight.w400,
                   ),
                   border: InputBorder.none,
                   isDense: true,
+                  contentPadding: EdgeInsets.zero,
                 ),
               ),
             ),
@@ -208,8 +213,7 @@ class _TasksGoalsScreenState extends State<TasksGoalsScreen> {
               child: state.searchQuery.isNotEmpty
                   ? IconButton(
                       key: const ValueKey('clear'),
-                      icon:
-                          Icon(Icons.close_rounded, color: iconColor, size: 20),
+                      icon: Icon(Icons.close_rounded, color: iconColor, size: 20),
                       onPressed: () {
                         _searchController.clear();
                         context.read<TasksGoalsCubit>().setSearchQuery('');

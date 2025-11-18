@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:focus/screens/onboarding_screen.dart';
 import 'package:focus/screens/home_screen.dart';
 import 'package:focus/services/storage_service.dart';
+import 'package:focus/services/notification_service.dart';
 import 'package:focus/utils/theme.dart';
 import 'package:focus/blocs/tasks_goals/tasks_goals_cubit.dart';
 
@@ -12,6 +13,7 @@ void Function()? themeToggleCallback;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await StorageService.init();
+  await NotificationService.initialize();
   runApp(const FocusFlowApp());
 }
 

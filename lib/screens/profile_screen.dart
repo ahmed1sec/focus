@@ -5,6 +5,14 @@ import 'package:focus/services/storage_service.dart';
 import 'package:focus/models/todo_task.dart';
 import 'package:focus/models/pomodoro_session.dart';
 
+String capitalizeWords(String text) {
+  if (text.isEmpty) return text;
+  return text.split(' ').map((word) {
+    if (word.isEmpty) return word;
+    return word[0].toUpperCase() + word.substring(1).toLowerCase();
+  }).join(' ');
+}
+
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
@@ -174,7 +182,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    _userName,
+                    capitalizeWords(_userName),
                     style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -303,6 +311,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildBarChart() {
     final now = DateTime.now();
+    // Get the last 7 days starting from 6 days ago to today
     final weekData = List.generate(7, (index) {
       final date = now.subtract(Duration(days: 6 - index));
       
@@ -329,23 +338,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     final maxValue = weekData.isEmpty ? 1.0 : (weekData.reduce((a, b) => a > b ? a : b) + 2).toDouble();
 
-    return BarChart(
-      BarChartData(
-        alignment: BarChartAlignment.spaceAround,
+    // Create spots for the line chart - week from 6 days ago to today
+    final spots = List.generate(7, (index) {
+      return FlSpot(index.toDouble(), weekData[index]);
+    });
+
+    return LineChart(
+      LineChartData(
+        minY: 0,
         maxY: maxValue,
-        barTouchData: BarTouchData(
+        lineTouchData: LineTouchData(
           enabled: true,
-          touchTooltipData: BarTouchTooltipData(
+          touchTooltipData: LineTouchTooltipData(
             tooltipRoundedRadius: 8,
             tooltipPadding: const EdgeInsets.all(8),
             tooltipBgColor: Theme.of(context).primaryColor,
-            getTooltipItem: (group, groupIndex, rod, rodIndex) {
-              final date = now.subtract(Duration(days: 6 - group.x.toInt()));
-              final dateStr = DateFormat('MMM dd').format(date);
-              return BarTooltipItem(
-                '$dateStr\n${rod.toY.toInt()} activities',
-                const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-              );
+            getTooltipItems: (List<LineBarSpot> touchedSpots) {
+              return touchedSpots.map((LineBarSpot touchedSpot) {
+                final date = now.subtract(Duration(days: 6 - touchedSpot.x.toInt()));
+                final dateStr = DateFormat('MMM dd').format(date);
+                return LineTooltipItem(
+                  '$dateStr\n${touchedSpot.y.toInt()} activities',
+                  const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                );
+              }).toList();
             },
           ),
         ),
@@ -355,12 +371,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
             sideTitles: SideTitles(
               showTitles: true,
               getTitlesWidget: (value, meta) {
+                if (value.toInt() < 0 || value.toInt() >= 7) return const SizedBox.shrink();
                 final date = now.subtract(Duration(days: 6 - value.toInt()));
                 return Text(
                   DateFormat('E').format(date).substring(0, 1),
-                  style: const TextStyle(fontSize: 12),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                  ),
                 );
               },
+              reservedSize: 30,
             ),
           ),
           leftTitles: const AxisTitles(
@@ -373,21 +394,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
             sideTitles: SideTitles(showTitles: false),
           ),
         ),
-        gridData: const FlGridData(show: false),
-        borderData: FlBorderData(show: false),
-        barGroups: List.generate(7, (index) {
-          return BarChartGroupData(
-            x: index,
-            barRods: [
-              BarChartRodData(
-                toY: weekData[index],
-                color: Theme.of(context).primaryColor,
-                width: 20,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
-              ),
-            ],
-          );
-        }),
+        gridData: FlGridData(
+          show: false,
+        ),
+        borderData: FlBorderData(
+          show: false,
+        ),
+        lineBarsData: [
+          LineChartBarData(
+            spots: spots,
+            isCurved: false,
+            color: Theme.of(context).primaryColor,
+            barWidth: 3,
+            isStrokeCapRound: true,
+            dotData: FlDotData(
+              show: true,
+              getDotPainter: (spot, percent, barData, index) {
+                return FlDotCirclePainter(
+                  radius: 4,
+                  color: Theme.of(context).primaryColor,
+                  strokeWidth: 2,
+                  strokeColor: Theme.of(context).scaffoldBackgroundColor,
+                );
+              },
+            ),
+            belowBarData: BarAreaData(
+              show: false,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -598,7 +633,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             SizedBox(height: 16),
             Text(
-              '© 2024 FocusFlow',
+              '© 2025 FocusFlow',
               style: TextStyle(fontSize: 12),
             ),
           ],
